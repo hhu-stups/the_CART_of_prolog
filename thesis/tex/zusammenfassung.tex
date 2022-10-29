@@ -1,0 +1,33 @@
+\section{Zusammenfassung}
+
+In dieser Arbeit werden zunächst die theoretischen Grundlagen eingeführt, um ein besseres Verständnis für den
+Hauptteil zu bekommen. Dafür wird erklärt was ein Entscheidungsbaum ist und, wie der CART-Algorithmus einen erstellen kann,
+was ein Random Forest ist und wie es konstruiert und ausgewertet wird und Grundlegende Informationen zu der
+Programmiersprache Prolog, welche für den Hauptteil meiner Arbeit benutzt wird.
+Im nächsten Kapitel wird dann meine Implementierung für den CART-Algorithmus und die Entscheidungen, die 
+ich während der Programmierung getroffen habe, vorgestellt.
+Zum Schluss werden zunächst die Grundlagen für den Vergleich der Implementierungen eingeführt und erklärt, um
+letztendlich die Ergebnisse von eben diesem vorzustellen.
+
+Das Experiment hat gezeigt, dass meine Implementierung funktioniert.
+Die Präzision oder der Mean Squared Error ist dabei stets mit einer Referenz Implementierung
+vergleichbar. Allerdings fällt auf, dass je größer der Datensatz ist, meine Implementierung
+deutlich mehr Zeit für die Durchführung des Algorithmus braucht.
+Dazu kommt, dass die Ausführungszeit mit Sicstus-Prolog bemerkbar länger ist, als die von SWI-Prolog.
+Da die Datenmengen, die heutzutage zur Verfügung stehen, immer größer werden, ist es fragwürdig,
+ob eine Implementierung die so schlecht mit der Größe des Datensatzes skaliert Anwendung finden kann.
+
+Der große Geschwindigkeitsunterschied lässt sich vielseitig begründen. Zunächst einmal ist die hier vorgestellte Implementation,
+im Rahmen einer Bachelorarbeit, also ungefähr in drei Monaten, entstanden. Somit kann der Code nicht zu einem Ausmaß optimiert sein,
+wie er es bei den Referenzimplementierungen ist, welche von großen Communitys über einen längeren Zeitraum gepflegt wurden.
+Außerdem ist der Alogrithmus an sich nicht optimiert. Ich habe mich in meiner Implementierung an dem grundlegenden CART-Algorithmus
+orientiert, jedoch wurden, wie bereits in meiner Arbeit erwähnt, schnellere Verfahren zur Aufteilung des Datensatzes vorgestellt~\cite{MOLA1997}
+oder aber auch ein generell optimierter CART-Algorithmus~\cite{CRAWFORD1989197}.
+Die verwendeten Programmiersprachen spielen natürlich auch eine Rolle. In dieser wurde motiviert, dass meine Implementierung in puren 
+Prolog geschrieben ist. Allerdings benutzt scikit-learn, beziehungsweise numpy, C/C++ im Hintergrund, um die Laufzeit
+des Programms deutlich zu verbessern. Im Falle der R Implementierung hat die Programmiersprache den Vorteil, dass sie darauf
+ausgelegt ist große Datenmengen effizient zu verarbeiten.
+
+An meiner Implementierung lässt sich also noch einiges machen. Man könnte damit anfangen ein schnelleres Splitting Verfahren zu implementieren
+oder auch erstmal kleinschrittig den vorhandenen Code optimieren. Außerdem bietet Prolog eine Schnittstelle zu C und C++. Somit
+könnte man die rechenintensiven Teile nach C/C++ auslagern um Zeit zu sparen.

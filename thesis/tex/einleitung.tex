@@ -1,0 +1,28 @@
+\section{Einleitung}
+
+Das Schlagwort maschinelles Lernen hat durch die heutzutage zur Verfügung stehende Rechenleistung,
+immer mehr Aufmerksamkeit gefunden. Zudem ist durch das Internet die Sammlung von Daten sehr viel leichter
+geworden und es stehen ausreichend Daten zur Verfügung, die analysiert werden können.
+Um diese Daten zu verarbeiten werden gerne Klassifikationsalgorithmen benutzt. Diese finden nicht nur
+Verwendung im Bereich des Data-Mining~\cite{sharma2016survey}, sondern auch in klinischen Studien~\cite{lewis2000introduction}
+und der psychologischen Forschung~\cite{Strobl2009-hw}.
+In diesen Feldern wird für die Klassifikation ein sogenannter Entscheidungsbaum benutzt.
+Entscheidungsbäume sind in den eben genannten Gebieten beliebt, da sie sich leicht grafisch darstellen lassen
+und die Regeln, nach denen klassifiziert wird, ablesbar und leicht verständlich sind.
+Die zwei bekanntesten Algorithmen zur Erstellung von Entscheidungsbäumen sind schon lange im Umlauf.
+Der CART-Algorithmus~\cite{breiman1984classification} wurde von Breiman im Jahr 1984 und C4.5, von Quinlan, im Jahr 1993~\cite{quinlan1993c45}
+vorgestellt. CART lässt sich sogar für sogenannte Regressionsprobleme verwenden, wodurch für eine Eingabe auch ein stetiger Wert
+vorhergesagt werden kann anstatt einer Klasse. Dieser Algorithmus ist folglich auch in verschiedenen Bibliotheken für maschinelles Lernen,
+in verschiedenen Programmiersprachen, implementiert. Allerdings nicht in Prolog.
+
+Prolog~\cite{Colmerauer1993TheBO} ist eine logische Programmiersprache und spielt eine große Rolle beim Bau von Expertensystemen~\cite{merritt2012building}
+und wird heutzutage gerne im Bereich der künstlichen Intelligenz~\cite{shoham2014artificial} und diversen anderen Feldern~\cite{806816,wicaksono2016relational} eingesetzt.
+Diese Programmiersprache besitzt keine Standard Bibliothek für Algorithmen des maschinellen Lernens, trotz seiner wichtigen Rolle in der künstlichen Intelligenz.
+Da der CART-Algorithmus rekursiv ist, macht es durchaus Sinn diesen Algorithmus, in Prolog umzusetzen, da diese Programmierspache
+hervorragend mit Rekursion umgehen kann. Zusätzlich würde eine Implementierung eines Entscheidungsbaums in Prolog zeigen, ob es sinnvoll ist
+Machine-Learning-Algorithmen in puren Prolog zu implementieren.
+
+In dieser Arbeit soll untersucht werden, wie gut eine pure Prolog Implementierung des Entscheidungsbaum Algorithmus
+CART, im Vergleich zu den weit verbreiteten Referenzimplementierungen aus Python und R ist.
+Dafür wird zunächst das benötigte Wissen über die benutzten Algorithmen und Prolog eingeführt.
+Daraufhin wird die Implementierung und anschließend die Ergebnisse eines Performancevergleichs vorgestellt.

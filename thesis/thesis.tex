@@ -1,0 +1,180 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Universität Düsseldorf                                                       %
+% Lehrstuhl für Softwaretechnik und Programmiersprachen                        %
+% Vorlage für Bachelor- und Masterarbeiten                                     %
+% Erstellt: 2019-09-03                                                         %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass{hhuthesis}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Einstellungen zur Personalisierung                                         %%
+%%                                                                            %%
+%% Im Folgenden können Sie Ihre Arbeit personalisieren.                       %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Spracheinstellung
+%% Kommentieren Sie die entsprechende Zeile ein bzw. aus.
+%% Wir empfehlen jedem sich an einer englischen Arbeit zu versuchen.
+% \usepackage[ngerman,english]{babel} % English
+\usepackage[english,ngerman]{babel} % Deutsch
+
+%% Ihr Name
+\author{Heiko Kauschke}
+
+%% Der Titel der Arbeit
+\title{The CART of Prolog: Implementierung von Entscheidungsbäumen mittels logischer Programmierung}
+% \subtitle{Usually not needed}
+
+%% Der zu erreichende Abschluss, entweder Bachelor oder Master
+\graduationtype{Bachelor}
+% \graduationtype{Master}
+
+%% Ihr Studienfach
+\subject{Informatik}
+
+%% Beginn- und Abgabedaten der Arbeit
+\begindate{02.~Juni~2022} % Beginn
+\duedate{02.~September~2022} % Abgabe
+
+%% Erst- und Zweitgutachter
+\firstexaminer{Prof.~Dr.~Michael~Leuschel}
+\secondexaminer{Prof.~Dr.~Stefan~Conrad}
+
+%% Farb- oder Schwarzweißdruck
+% Benutzen Sie das Kommando \blackwhiteprint,
+% wenn sie in schwarzweiß drucken möchten.
+% Im Farbdruck ist jede farbige Seite idR teurer.
+% \blackwhiteprint % Kommentarzeichen entfernen für Schwarzweißdruck
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% (Ende) Einstellungen zur Personalisierung                                  %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% LaTeX Packages in Nutzung                                                  %%
+%%                                                                            %%
+%% Im folgenden können Sie für die Niederschrift Ihrer Arbeit benötigte       %%
+%% LaTeX-Pakete einbinden.                                                    %%
+%% Diese Vorlage kommt bereits mit einigen nützlichen inkludierten Paketen.   %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Macht den \todo-Befehl verfügbar.
+%% Hiermit können Sie Abschnitte annotieren,
+%% welche weiterer Bearbeitung bedürfen.
+\usepackage[textsize=scriptsize]{todonotes}
+
+%% Zeige Zeilennummern in der Arbeit an.
+%% Der \linenumbers Befehl muss hierzu aufgerufen werden.
+%% Praktisch für Feedback Ihrer potentiellen Korrekturleser!
+\usepackage{lineno}
+% \linenumbers % <- Kommentar entfernen!
+
+
+%% Häufig benutzte mathematische Packages.
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{siunitx} % \num Befehl zum einfacheren Formatieren von Zahlen.
+\usepackage{enumitem} % Leichter konfigurierbare enumerate-Umgebungen.
+\usepackage{subcaption} % Unterteilung von Figures in Subfigures.
+\usepackage[colorlinks]{hyperref} % Klickbare Links (z.B. Inhaltsverzeichnis).
+\sethyperrefpdfinfos{} % Setzt Autor, Titel, etc. als PDF-Metadaten.
+\sethyperrefhhucolors{} % Setzt den Farbsatz der HHU für hyperref.
+\usepackage{hypcap} % Ankert hyperref links auf Grafik/Tabelle statt Caption.
+\usepackage{url} % \url Kommando für Darstellung von Links
+\usepackage{csquotes} % Improved quoting.
+\usepackage{microtype} % Verbessertes Kerning zwischen Wörtern.
+
+%% Tabellen
+\usepackage{tabularx} % tabularx Umgebung für mehr Kontrolle über Tabellen.
+\usepackage{booktabs} % \toprule, \midrule, \bottomrule
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{longtable} % Große Tabellen gehen über mehrere Seiten.
+
+%% Quellcode
+\usepackage{listings} % Einbindung von Code.
+\setlstlistingstyle{} % Kosmetische Einstellungen
+
+%% Algorithmen in Pseudocode
+\usepackage{algorithm} % Float-Umgebung für angegebene Algorithmen.
+\usepackage{algorithmicx} % Angabe von Algorithmen in Pseudocode.
+\usepackage{algpseudocode} % Standard Pseudocode-Elemente für Algorithmen.
+\setalgorithmstyle{} % Kosmetische Einstellungen
+
+%% Intelligenteres Referenzieren mittels \cref.
+%% \languagename um dynamisch zwischen ngerman oder english zu wechseln.
+\usepackage[\languagename,capitalize,noabbrev]{cleveref}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% (Ende) LaTeX Packages in Nutzung                                           %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{document}
+%% Set up title page, declaration of authorship, abstract, acknowledgements
+\frontmatter
+\makefrontmatter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Danksagungen                                                               %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{acknowledgements}
+  Ich möchte mich herzlichst bei Jannik Dunkelau für die gute Betreuung bedanken.
+  Zusätzlich danke ich allen, die meine Arbeit Probe gelesen haben und mir geholfen
+  haben sie stets ein Stück besser zu machen.
+\end{acknowledgements}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% (Ende) Danksagungen                                                        %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\tableofcontents
+
+
+\mainmatter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Der Inhalt der Arbeit                                                      %%
+%%                                                                            %%
+%% Hier können Sie die schriftliche Ausarbeitung ihrer Arbeit                 %%
+%% niederschreiben. Der Übersicht halber bietet sich jedoch an, dies in einer %%
+%% oder mehreren separaten Dateien zu tun, welche mittels \input eingebunden  %%
+%% werden --- wie auch in der Vorlage geschieht.                              %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\input{contents.tex}
+
+%% Dieser Part kann auskommentiert werden, sollte kein Anhang nötig sein.
+%% Der \appendix-Befehl leitet hierbei den Anhang ein.
+\appendix
+\input{appendix.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% (Ende) Der Inhalt der Arbeit                                               %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\backmatter
+
+%% Listings of figures, tables, etc. Delete what is not needed.
+\listoffigures
+
+\listoftables
+
+% Algorithms
+\listofalgorithms
+
+% Code Listings
+\lstlistoflistings
+
+\clearpage
+\bibliography{references}
+%% Depending on Language, use german alphadin or original alpha
+\iflanguage{ngerman}{
+  \bibliographystyle{alphadin}
+}{
+  \bibliographystyle{alpha}
+}
+
+\end{document}

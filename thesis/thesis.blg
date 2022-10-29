@@ -1,0 +1,59 @@
+This is BibTeX, Version 0.99d
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: thesis.aux
+Reallocating 'name_of_file' (item size: 1) to 11 items.
+Reallocating 'name_of_file' (item size: 1) to 9 items.
+The style file: alphadin.bst
+Reallocating 'singl_function' (item size: 4) to 100 items.
+Reallocating 'singl_function' (item size: 4) to 100 items.
+Reallocating 'wiz_functions' (item size: 4) to 6000 items.
+Reallocating 'singl_function' (item size: 4) to 100 items.
+Reallocating 'singl_function' (item size: 4) to 100 items.
+Database file #1: references.bib
+Warning--empty pages in Colmerauer1993TheBO
+Warning--empty pages in lewis2000introduction
+Warning--empty booktitle in 806816
+Warning--empty pages in 806816
+Warning--empty pages in wicaksono2016relational
+You've used 30 entries,
+            4793 wiz_defined-function locations,
+            1098 strings with 11722 characters,
+and the built_in function-call counts, 21110 in all, are:
+= -- 2210
+> -- 612
+< -- 581
++ -- 684
+- -- 220
+* -- 1544
+:= -- 3596
+add.period$ -- 36
+call.type$ -- 30
+change.case$ -- 168
+chr.to.int$ -- 30
+cite$ -- 35
+duplicate$ -- 568
+empty$ -- 1455
+format.name$ -- 405
+if$ -- 4150
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 132
+newline$ -- 178
+num.names$ -- 90
+pop$ -- 225
+preamble$ -- 1
+purify$ -- 228
+quote$ -- 0
+skip$ -- 1041
+stack$ -- 0
+substring$ -- 1714
+swap$ -- 147
+text.length$ -- 113
+text.prefix$ -- 11
+top$ -- 0
+type$ -- 274
+warning$ -- 5
+while$ -- 191
+width$ -- 35
+write$ -- 400
+(There were 5 warnings)

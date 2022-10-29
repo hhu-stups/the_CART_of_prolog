@@ -1,0 +1,388 @@
+\section{Implementierung}
+In diesem Kapitel wird zunächst der selbst angefertigte Quellcode
+für den CART Algorithmus ausführlich erklärt. Darufhin folgt der Code für den
+Random Forest Algorithmus. Zum Schluss wird noch auf den Code eingegangen, der benötigt wird um
+Vorhersagen mit den erzeugten Strukturen zu Treffen.
+
+\subsection{Entscheidungsbäume}
+Vorab muss erwähnt werden, dass die Art wie ich meinen Baum und den Datensatz repräsentiere,
+auf der Code-Skizze zu Entscheidungsbäumen
+aus dem Buch \enquote{Prolog programming for artificial intelligence}~\cite{bratko2001prolog}, basiert.
+Wie das aussieht ist in \cref{table:Struktur} dargestellt.
+\begin{table}[ht]
+  \begin{center}
+    \caption{Darstellung von Baum und Datensatz}
+    \label{table:Struktur}
+    \begin{tabular}{cc}
+      \toprule
+      Strukur   & Darstellung \\
+      \midrule
+      Baum      &  \(tree(Attribut = Wert, LinkerTeilbaum, RechterTeilbaum)\)    \\
+      Datensatz   &  \([example(Klasse, [Att1 = Wert1,...]), example(...), ...]\)  \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+\end{table}
+
+Analog zu der Erklärung zum Algorithmus, wird die Implementierung von oben nach unten erklärt.
+Im ersten Prädikat, \cref{lst:induce-tree}, befindet sich der rekursive Aufruf der den Baum konstruiert.
+Der erste Fall gibt einen leeren Baum, beziehungsweise Liste, zurück, falls keine Daten übergeben wurden.
+Der zweite Fall überprüft, ob alle momentan genutzten Datenpunkte dieselbe Klasse haben, wie der erste Datenpunkt
+in der Liste. Dafür wird das Hilfsprädikat \texttt{check-classes/2} verwendet. Falls dies der Fall sein sollte wird ein Blatt erzeugt.
+Der dritte Fall erzeugt zwei Kinder im Entscheidungsbaum. Dafür wird zuerst, mithilfe von \cref{lst:find-best-split},
+aus den vorhandenen Datenpunkten, ein Wert zu einem Attribut gefunden, der am besten zwischen den Klassen
+differenziert. Daraufhin wird mit Hilfe dieses Attribut-Wert-Paares und \texttt{split/4} der Datensatz entsprechend aufgeteilt.
+Der Wert von dem gefundenen Attribut-Wert-Paar ist im numerischen Fall eine Zahl und im kategorischen Fall eine Teilmenge der Werte,
+die das entsprechende Attribut annehmen kann.
+Dabei landen die Datenpunkte, bei numerischen Werten, die kleiner sind als der gegebene Wert, im linken ansonsten im rechten Teilbaum.
+Bei kategorischen Werten landen die Datenpunkte im linken Teilbaum, wenn deren Werte, teil der Teilmenge sind, ansonten im rechten.
+Die daraus entstehenden Teilmengen werden dann genutzt um Teilbäume zu konstruieren.
+Im Gegensatz zu den üblichen Implementierungen habe ich mich dazu entschieden den Baum bis zur höchsten Reinheit aufzubauen.
+Zum einen besteht laut Demidova und Usachev~\cite{Demidova_2020} die Gefahr, dass bei anderen Abbruchbedingungen
+die Klassifikations-Qualität verloren geht und zum anderen muss kein extra Quellcode für die Verwendung von Random Forest
+angefertigt werden.
+Jedoch gibt es eine weitere Abbruchbedingung die eingebaut werden musste. Falls der aktuelle Datensatz Datenpunkte
+enthält, die von verschiedenen Klassen sind, sich aber nicht unterscheiden lassen, wird ein Blatt erzeugt.
+Bei Klassifikationsbäumen hat das Blatt die Klasse, die am meisten im Datensatz vertreten ist, bei Regressionsbäumen
+ist das Blatt das arithmetische Mittel der Zielvariablen im Datensatz.
+\begin{lstlisting}[
+    float, caption={Prolog implementation of \texttt{induce\_tree/3}},
+    label={lst:induce-tree}, language=Prolog
+  ]
+%! induce_tree(+Daten:list, +Attribute:list, -Tree:term) is det
+%
+%  induziert den Entscheidungsbaum durch 3 verschiedene Faelle:
+%  1) Tree = null, wenn keine Daten existieren
+%  2) Tree = leaf(Class), wenn alle Beispiele zur selben Klasse gehoeren
+%            oder nicht mehr unterschieden werden koennen
+%  3) Tree = tree(Attribut = Wert, SubTree1, SubTree2), wenn es mehr als
+%            eine vorhandene Klasse gibt.
+induce_tree([], _, []) :- !.
+induce_tree([example(Klasse, _)|T], _, leaf(Klasse)) :-
+    check_classes(T, Klasse), !.
+induce_tree(Daten, Attribute, tree(BestAttVal, SubTree1, SubTree2)) :-
+    find_best_split(Daten, Attribute, BestAttVal),
+    split(Daten, BestAttVal, Split1, Split2),
+    induce_tree(Split1, Attribute, SubTree1),
+    induce_tree(Split2, Attribute, SubTree2).
+induce_tree(Daten, Attribute, leaf(Klasse)) :-
+    find_best_split(Daten, Attribute, err = Klasse), !.
+\end{lstlisting}
+
+Als nächstes geht es darum das beste Attribut-Wert-Paar zum aufteilen des Datensatzes zu finden.
+Dieser Schritt lässt sich in zwei Teilschritte unterteilen. Als erstes muss eine Liste erstellt werden,
+die die Attribut-Wert Paare beinhaltet an denen der Datensatz potentiell aufgeteilt werden kann.
+Als zweites muss das Paar ausgewählt werden, welches die zwei \enquote{reinsten} Datensätze hervorbringt.
+Die Koordinierung dieser beiden Aufgaben wird von \cref{lst:find-best-split} übernommen.
+In der Implementierung wird an dieser Stelle die eben erwähnte Abbruchbedingung abgefangen.
+Sollte \texttt{split\_candidates/2} eine leere Kandidatenliste ausgeben, ist klar, dass der aktuelle
+Datensatz nicht weiter aufgeteilt werden kann. In dem Fall wird wie beschrieben vorgegangen.
+\begin{lstlisting}[
+    float, caption={Prolog implementation of \texttt{find\_best\_split/3}},
+    label={lst:find-best-split}, language=Prolog
+  ]
+%! find_best_split(+Daten:list, +Attribute:list, -BestAttVal:Att = Val)
+%  is det
+%
+% Findet den besten Split zur aktuellen Datenlage
+find_best_split(Daten, Attribute, BestAttVal) :-
+    split_candidates(Daten, Attribute, Kandidaten),
+    ([] \= Kandidaten ->
+        best_split(Kandidaten, Daten, BestAttVal)
+    ;   get_classes(Daten, Klassen),
+        sort(Klassen, Klassenliste),
+        get_max(Klassenliste, Klassen, Max),
+        best_split(Max, err, BestAttVal)).
+\end{lstlisting}
+
+Das erstellen der Liste von potentiellen Aufteilungen wird von \texttt{split\_candidates/3} erledigt.
+Dieses Prädikat benutzt einen Akkumulator. Das heißt, dass es ein Prädikat mit seinen
+Variablen und einer zusätzlichen leeren Liste aufruft. Hier wird mithilfe von \cref{lst:split-candidates-attribute}
+eine Liste von Kandidaten für ein einzelnes Attribut erstellt. Diese Liste wird
+an den Akkumulator angehangen. Das wird so lange wiederholt, bis alle Attribute abgearbeitet sind.
+Dann wird der Akkumulator mit der Ausgabevariablen unifiziert.
+
+Um eine Liste der Kandidaten zu erstellen, geht \cref{lst:split-candidates-attribute} wie folgt vor:
+Zunächst wird durch \texttt{check\_attribute\_number/2} überprüft, ob das Attribut numerisch oder kategorisch ist.
+Bei numerischen Werten wird \texttt{get\_values\_n/3} aufgerufen.
+Hier wird wieder ein Akkumulator benutzt in dem die Werte zu dem aktuellen Attribut eingefügt werden.
+Dabei wird darauf geachtet, dass kein Wert, zu einem Attribut, doppelt vorkommt.
+Bei kategorischen Werten wird \texttt{get\_values\_k/3} aufgerufen. Hier wird analog
+zum vorherigen Prädikat vorgegangen.
+Nachdem eine Liste mit unterschiedlichen Werten vorliegt, berechnet \texttt{create\_candidates/3} daraus eine Liste mit möglichen Aufteilungen.
+Im numerischen Fall wird dabei die Mitte von zwei Werten aus der übergebenen Liste berechnet und als
+Attribut-Wert Paar in die Ergebnisliste aufgenommen. Im kategorischen Fall werden mit Hilfe von \texttt{my\_powerset/2}
+mindestens \(2^{m-1} - 1\) verschiedene Kombinationen von Werten aus der Kandidaten Liste erzeugt, wobei m die Anzahl an Werten ist,
+die das Attribut annehmen kann.
+Dabei ist jede Kombination in einer Liste verpackt und wird dann als Attribut-Liste-Paar
+in die Ergebnisliste aufgenommen.
+Dadurch beinhaltet die Liste alle möglichen Kandidaten zur Aufteilungen des aktuellen Datensatzes.
+Alternativ hätte man bei numerischen Werten das Minimum und Maximum nehmen können und in diesem Intervall
+eine feste Anzahl an Aufteilungen, in gleichmäßigen Abständen durchführen können~\cite{breiman1984classification}.
+Mola \cite{MOLA1997} hat auch schon einen schnelleren Aufteilungsalgorithmus vorgestellt, der auf dem Vorhersehbarkeits
+Index basiert.
+
+\begin{lstlisting}[
+    float, caption={Prolog implementation of \texttt{split\_candidates\_attribute/3}},
+    label={lst:split-candidates-attribute}, language=Prolog
+  ]
+%! split_candidates_attribute(+Daten:list, +Attribut:atom, -Kandidaten:list)
+%  is det
+%
+%  Erstellt ein Liste mit allen moeglichen Splits zu einem Attribut
+split_candidates_attribute(Daten, Attribut, Kandidaten) :-
+    (check_attribute_number(Daten, Attribut) -> 
+    get_values_n(Daten, Attribut, Values)
+    ; get_values_k(Daten, Attribut, Values)),
+    create_candidates(Values, Attribut, Kandidaten).
+\end{lstlisting}
+
+Mit der Liste aller möglichen Aufteilungen wird durch \cref{lst:best-split} die Aufteilung vom Datensatz gefunden,
+die das Maß der Unreinheit minimiert. Im ersten Fall wird die Abbruchbedingung abgefangen und die Klasse für das Blatt nach oben gegeben.
+Ansonsten werden die Unreinheit der Aufteilung, die durch den ersten
+Kandidaten entsteht, und der Kandidat selbst, je als Variable gemerkt. Danach wird in jedem Schritt die Unreinheit
+eines neuen Kandidaten berechnet und mit der entsprechenden Variable verglichen. Wenn der Wert kleiner ist,
+wird mit diesem in den nächsten Schritten verglichen und der Kandidat wird auch gemerkt. Falls der neue Wert
+der Unreinheit größer ist, werden die Variablen nicht überschrieben und es geht mit dem nächsten Kandidaten weiter.
+
+\begin{lstlisting}[
+  float, caption={Prolog implementation of \texttt{best\_split/3}},
+  label={lst:best-split}, language=Prolog
+]
+%! best_split(+Kandidaten:list, +Daten:list, -BestAttVal: Att = Val)
+%  is det
+%! Kandidaten = [Att = Val1, Att = Val2, ...]
+%
+%  Verwendet alle Kandidaten aus der Liste um den besten Split
+%  zu finden und auszugeben
+best_split(Klasse, err, err = Klasse).
+best_split([H|T], Daten, Res) :-
+    impurity(Daten, H, Min),
+    best_split(T, Daten, Min, H, Res).
+best_split([], _, _, Res, Res) :- !.
+best_split([H|T], Daten, Min, Cur, Res) :-
+    impurity(Daten, H, CombUnreinheit),
+    (CombUnreinheit < Min ->
+        best_split(T, Daten, CombUnreinheit, H, Res)
+    ;   best_split(T, Daten, Min, Cur, Res)).
+\end{lstlisting}
+
+Entscheidend ist auch, welches Maß der Unreinheit verwendet wird.
+Dieses wird hinter dem Prädikat \cref{lst:impurity} versteckt.
+\begin{lstlisting}[
+  float, caption={Prolog implementation of \texttt{impurity/3}},
+  label={lst:impurity}, language=Prolog
+]
+%! impurity(+Daten:list, +AttVal:Attribute = Value, -Unreinheit:double) is  det
+%
+%  Gibt die kombinierte Unreinheit, von dem Split des Datensatzes, aus
+impurity(Daten, AttVal, CombUnreinheit) :-
+    split_class(Daten, AttVal, Split1, Split2),
+    combgini(Split1, Split2, CombUnreinheit).
+\end{lstlisting}
+In dieser Implementierung wird die \enquote{Gini-Unreinheit} verwendet.
+Doch bevor gerechnet werden kann, bereitet \texttt{split-class/3} die Daten entsprechend auf.
+Dieses Prädikat erstellt aus dem übergebenen Datensatz, mithilfe eines Attribut-Wert Paars, zwei kleinere Datensätze.
+Die kleineren Datensätze bestehen dabei nur aus den Klassen der Datenpunkte, die in dem Datensatz zugeordnet wurden.
+Dafür werden wieder 2 Akkumulatoren verwendet. Im ersten Fall wird zunächst nach dem Attribut vom Attribut-Wert-Paar
+im Datensatz gesucht. Sobald dieses gefunden ist, gibt es einen Fall dafür, dass der Wert zu diesem
+Attribut kategorisch oder numerisch ist. Im numerischen Fall wird überprüft, ob der Wert des Datenpunktes kleiner ist,
+als der des übergebenen Werts. Falls dies der Fall ist, wird die Klasse des Datenpunktes an den linken Akkumulator angehangen,
+ansonsten am rechten. Analog dazu wird mit kategorischen Werten umgegangen, nur das hier überprüft wird, ob
+der Wert des Datenpunkts in der Liste der übergebenen Werte vorhanden ist.
+
+Nach der Erstellung, der aus Klassen bestehenden Datensätze, berechnet \cref{lst:combgini}
+die kombinierte Gini-Unreinheit der beiden Datensätze. Als erstes wird die Gini-Unreinheit der
+einzelnen Datensätze mit \texttt{gini/2} berechnet. Die Ergebnisse daraus werden dann mit dem Anteil
+an Datenpunkten, den der jeweilige Datensatz aus dem ursprünglichen Datensatz hatte, multipliziert.
+Diese Ergebnisse werden dann addiert und bilden die kombinierte Unreinheit.
+Dieses Verfahren entspricht \cref{eq:combgini}.
+
+\begin{lstlisting}[
+  float, caption={Prolog implementation of \texttt{combgini/3}},
+  label={lst:combgini}, language=Prolog
+]
+%! combgini(+Split1:list, +Split2:list, -CombUnreinheit:double) is det
+%
+%  Berechnet die gewichtete Summe von zwei Splits.
+%  Beachte Split ist eine Liste von Klassen!
+combgini(Split1, Split2, CombUnreinheit) :-
+    gini(Split1, Unreinheit1),
+    gini(Split2, Unreinheit2),
+    length(Split1, LSplit1),
+    length(Split2, LSplit2),
+    LDaten is LSplit1 + LSplit2,
+    Gewicht1 is LSplit1 / LDaten,
+    Gewicht2 is LSplit2 / LDaten,
+    GUnreinheit1 is Gewicht1 * Unreinheit1,
+    GUnreinheit2 is Gewicht2 * Unreinheit2,
+    CombUnreinheit is GUnreinheit1 + GUnreinheit2.
+\end{lstlisting}
+
+Der Algorithmus für die Regression funktioniert zu weiten Teilen wie der Klassifikationalgorithmus,
+nur dass hier, als Maß der Unreinheit, die Summe der quadrierten Residuen minimiert wird.
+\cref{lst:residual-sum-sq} ruft \texttt{mean/2} auf um das arithmetische Mittel,
+der Werte in den Datensätzen zu berechnen. Damit wird dann in \texttt{residual-split/3}
+die Summe der quadrierten Differenzen, der einzelnen Werte, zum arithmetischen Mitteln, ihres
+jeweiligen Datensatzes, berechnet. Dieses Verfahren entspricht \cref{eq:rss}
+Zum Schluss werden die beiden Summen addiert und ergeben das Maß der Unreinheit.
+
+\begin{lstlisting}[
+  float, caption={Prolog implementation of \texttt{residual\_sum\_sq/3}},
+  label={lst:residual-sum-sq}, language=Prolog
+]
+%! residual_sum_sq(+Split1:list, +Split2:list, -ResSumSq:double) is det
+%
+%  Berechnet die Summe der quadrierten Residuen von zwei Splits.
+%  Beachte Split ist eine Liste von Target Werten!
+residual_sum_sq(Split1, Split2, ResSumSq) :-
+    mean(Split1, Mean1),
+    mean(Split2, Mean2),
+    residual_split(Split1, Mean1, SumSq1),
+    residual_split(Split2, Mean2, SumSq2),
+    ResSumSq is SumSq1 + SumSq2.
+\end{lstlisting}
+
+Um keinen Code programmieren zu müssen, der eine Wahl ermöglicht, ob ein Klassifikationsbaum
+oder Regressionsbaum erstellt werden soll, sind beide Verfahren in eigenen Dateien gespeichert,
+sodass man nur das entsprechende Modul benutzten muss, den dazugehörigen Baum zu erzeugen.
+
+\subsection{Random Forest}
+
+Mein Random-Forest-Algorithmus besteht aus drei Schritten. Als erstes werden zufällig Datenpunkte aus dem Datensatz,
+mit zurücklegen gezogen. Dadurch werden Datenpunkte entsprechend der Anzahl im Datensatz gezogen.
+Als zweites wird eine Liste von zufälligen Teilmengen der Attribute erzeugt. Als drittes wird aus jeweils
+einem gezogenen Datensatz und einer Teilmenge von Attributen ein Entscheidungsbaum erzeugt.
+Sowohl die Anzahl der gezogenen Datensets und der Teilmengen von Attributen werden im voraus bestimmt
+und resultieren in einer Liste mit dieser Anzahl an Entscheidungsbäumen.
+Dieser Vorgang wird durch \cref{lst:induce-forest} koordiniert.
+
+\begin{lstlisting}[
+  float, caption={Prolog implementation of \texttt{induce\_forest/3}},
+  label={lst:induce-forest}, language=Prolog
+]
+%! induce_forest(+Daten:list, Attribute:list, N:int,-RandomForest:list) is det
+%
+%  erstellt aus den Daten einen Entscheidungswald;
+%  Die Anzahl der Baueme wird angegeben;
+%  die Anzahl pro Schritt benutzten Attribute orientiert sich 
+%  an einer in der praxis bewaehrten Faustregel
+induce_forest(Daten, Attribute, N, RandomForest) :-
+    bootstrappen(Daten, N, Samples),
+    choose_attributes(Attribute, N, AttributSets),
+    induce_trees(Samples, AttributSets, RandomForest).
+\end{lstlisting}
+
+Als nächstes werden die benötigten Prädikate im Detail erklärt.
+
+Das zufällige erstellen von Datensätzen wird durch \cref{lst:bootstrappen} implementiert.
+Zunächst wird die Länge des Datensatzes bestimmt. Danach werden durch \texttt{get\_sample/3},
+entsprechend dieser Anzahl zufällig Datenpunkte, mit zurücklegen, gezogen. Das Ergebnis wird als
+Liste in eine Liste eingefügt. Dieser Vorgang wird so oft wiederholt, wie Entscheidungsbäume am Ende
+erzeugt werden sollen.
+
+\begin{lstlisting}[
+  float, caption={Prolog implementation of \texttt{bootstrappen/3}},
+  label={lst:bootstrappen}, language=Prolog
+]
+%! bootstrappen(+Daten:list, +Trees:int, -Samples:list) is det
+%
+%  erstellt eine Liste von Listen, wobei jede der N Listen
+%  ein bootstrap sample von dem Datensatz ist
+bootstrappen(Daten, N, Samples) :-
+    length(Daten, Len),
+    bootstrappen(Daten, Len, N, Samples).
+bootstrappen(_, _, 0, []) :- !.
+bootstrappen(Daten, Len, N, [Sample|Samples]) :-
+    get_sample(Daten, Len, Sample),
+    NewN is N - 1,
+    bootstrappen(Daten, Len, NewN, Samples).
+\end{lstlisting}
+
+Die Erstellung der Teilmengen der Attribute wird durch \cref{lst:choose-attributes} initiiert.
+Hier wird die Größe der Teilmengen bestimmt. Die Anzahl der benutzten Attribute
+wird, wie in \cref{eq:att-klass,eq:att-reg} vorgestellt berechnet.
+
+\begin{lstlisting}[
+  float, caption={Prolog implementation of \texttt{choose\_attributes/3}},
+  label={lst:choose-attributes}, language=Prolog
+]
+%! choose_attributes(+Attribute:list, +N:int, -AttributSets) is det
+%
+%  erstellt N Listen, welche aus zufaellig ausgewahelten Attributen bestehen.
+%  Die Anzahl der Ausgewaehlten Attributen ist,
+%  bei Klassifikation, die abgerundete Wurzel, der Anzahl, der Attribute
+choose_attributes(Attribute, N, AttributSets) :-
+    length(Attribute, Int),
+    TRes is sqrt(Int),
+    Res is floor(TRes),
+    choose_all_members(Attribute, Res, N, AttributSets).
+\end{lstlisting}
+
+Das eigentliche Erstellen der Teilmengen ist in \cref{lst:choose-all-members} implementiert.
+Hier wird in jeden Schritt eine Permutation der Attribut-Liste erstellt. Anschließend
+werden so viele Attribute wie benötigt, vom Anfang der Liste beginnend herausgenommen und als
+Teilmenge in die Ergebnisliste aufgenommen.
+Dieser Vorgang wird wiederholt, bis die Anzahl der angefertigten Teilmengen,
+der vorgegebenen Anzahl entspricht.
+
+\begin{lstlisting}[
+  float, caption={Prolog implementation of \texttt{choose\_members/4}},
+  label={lst:choose-all-members}, language=Prolog
+]
+%! choose_all_members(+Attribute:list, +Len:int, +N:int, -AttributSets:list) is det
+%
+%  erstell N, Len Lange Listen, welche, zufaellig ausgewaehlte, unterschiedliche
+%  Elemente aus Attribute beinhalten
+choose_all_members(_, _, 0, []) :- !.
+choose_all_members(Attribute, Len, N, [AttributSet|AttributSets]) :-
+    random_permutation(Attribute, Permutation),
+    take(Permutation, Len, AttributSet),
+    NewN is N - 1,
+    choose_all_members(Attribute, Len, NewN, AttributSets).
+\end{lstlisting}
+
+Zum Schluss wird von \texttt{induce\_trees/3} eine Liste von Entscheidungsbäumen erstellt.
+Dafür wird jeweils ein zufällig erstellter Datensatz und eine Teilmenge der Attribute genommen
+und \cref{lst:induce-tree} aufgerufen.
+
+\subsection{Vorhersagen}
+In diesem Unterkapitel wird der Quellcode erklärt, der benutzt wird um eine
+Vorhersage mit einem Entscheidungsbaum oder einem Random Forest zu treffen.
+Bei der Vorhersage die von Entscheidungsbäumen getroffen werden, überprüft \cref{lst:check-sample},
+ob der Wert mit dem getrennt wird numerisch oder kategorisch ist. Im numerischen Fall,
+wird überprüft, ob der Wert vom Datenpunkt, zum entsprechendem Attribut kleiner ist,
+als der im Knoten. Falls ja, geht es in dem linken Teilbaum weiter, ansonsten im rechten.
+Der kategorische Fall funktioniert analog, nur das überprüft wird ob, der Wert des Datenpunktes,
+ein Element in der Liste der Werte ist.
+Sobald man in einem Blatt angekommen ist, ist der Inhalt des Blatts die Vorhersage.
+
+\begin{lstlisting}[
+  float, caption={Prolog implementation of \texttt{check\_sample/3}},
+  label={lst:check-sample}, language=Prolog
+]
+%! check_sample(+Tree:Entscheidungsbaum, +Example:list, -Res:Class) is det
+%
+%  Gibt die vom Entscheidungsbaum vorhergesehene Klasse zu einem Datenpunkt
+%  ([att1=val1,...]) aus
+check_sample(leaf(Class), _, Class).
+check_sample(tree(Att = Val1, SubTree1, SubTree2), Example, Result) :-
+    get_value(Example, Att, Val2),
+    (is_list(Val1) ->
+        (member(Val2,Val1) ->
+            check_sample(SubTree1,Example,Result)
+        ;   check_sample(SubTree2,Example,Result))
+    ;   (Val2 < Val1 ->
+            check_sample(SubTree1,Example,Result)
+        ;   check_sample(SubTree2,Example,Result))).
+\end{lstlisting}
+
+Um mehrere Datenpunkte auf einmal einzugeben wurde \texttt{check\_all\_sample/3}
+implementiert. Dieses Prädikat ruft für jeden Datenpunkt \cref{lst:check-sample} auf
+und verpackt alle Ergebnisse in einer Liste.
+
+Ein Random Forest, trifft seine Vorhersage, durch einen Mehrheitsentscheid oder das arithmetische Mittel.
+In der Implementierung wird für einen Datenpunkt eine Vorhersage von jedem Entscheidungsbaum im 
+Random Forest getroffen.
+Im Fall der Klassifikation wird die am meisten vorhergesagte Klasse ausgegeben, im Fall der Regression,
+wird das arithmetische Mittel aller Vorhersagen ausgegeben.

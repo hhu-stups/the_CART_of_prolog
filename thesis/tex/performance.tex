@@ -1,0 +1,559 @@
+\section{Experiment}
+In diesem Kapitel werden zunächst die nötigen Vorbereitungen für das Experiment in \cref{sec:Vorbereitung} vorgestellt.
+In dem \cref{sec:Performance} wird die Präzision und die Ausführungszeit, der in dieser Arbeit vorgestellten Implementierung in 
+SWI-Prolog~\cite{wielemaker:2011:tplp} und SICSTus-Prolog~\cite{carlsson1988sicstus},
+mit Implementierungen aus den R Bibliotheken \enquote{rpart}~\cite{therneau2015package} und \enquote{randomForest}~\cite{rcolorbrewer2018package}
+und der Python Bibliothek \enquote{scikit-learn}~\cite{scikit-learn}.
+
+\subsection{Vorbereitung} \label{sec:Vorbereitung}
+Zunächst wird die Art der Datenbeschaffung vorgestellt. Daraufhin werden die benutzten Metriken erklärt.
+Zum Schluss werden die Implementierungen aus den Referenzimplementationen exemplarisch vorgestellt.
+
+\subsubsection{Datenbeschaffung}
+Um die Ergebnisse der einzelnen Implementierungen miteinander vergleichen zu können wurden jeweils fünf Train-Test-Aufteilungen
+zu den einzelnen Datensätzen erstellt und in CSV-Dateien abgespeichert. Die Daten werden über scikit-learn heruntergeladen
+und anschließend mithilfe der Bibliothek \enquote{pandas}~\cite{mckinney2011pandas} als CSV Datei abgespeichert.
+Für Train-Test-Aufteilungen bietet scikit-learn die Funktion \texttt{train\_test\_split} an. Diese zerlegt einen übergebenen
+Datensatz, in einem selbst bestimmbaren Verhältnis, in Trainings und Test Daten. Ich habe mich für 70\% der Daten
+im Trainings- und 30\% der Daten im Test-Datensatz entschieden. Um die Zerlegung zu replizieren,
+kann sogar ein Seed für den Zufallsgenerator übergeben werden. \cref{lst:daten} zeigt beispielhaft die Erstellung
+einer Train-Test-Aufteilung. Für alle fünf Aufteilungen eines Datensatzes wurden jeweils die Seeds 18, 19, 20, 21 und 22 verwendet.
+\begin{lstlisting}[
+  float, caption={Train-Test-Split and convert to csv},
+  label={lst:daten}, language=Python
+]
+iris_feature_train1, iris_feature_test1, iris_target_train1, iris_target_test1 =
+        train_test_split(iris['data'],iris['target'],test_size=0.3,random_state=18)
+
+df = pd.DataFrame(data=iris_feature_train1, columns = iris['feature_names'])
+df['class'] = iris_target_train1
+df.to_csv('iris_train1.csv', sep = ',', index = False)
+
+df = pd.DataFrame(data=iris_feature_test1, columns = iris['feature_names'])
+df['class'] = iris_target_test1
+df.to_csv('iris_test1.csv', sep = ',', index = False)
+\end{lstlisting}
+
+\subsubsection{Zeitmessung}
+Der Kern des Experiments soll es sein, die gemessene Trainingszeit der Implementierungen miteinander zu vergleichen.
+Dafür wird in diesem Unterkapitel die Zeitmessung vorgestellt.
+
+Die Zeitmessung ist in allen Implementierungen analog. Es wird eine vorgefertigte Methode für Zeitstempel
+vor und nach dem Aufruf der Methode, die den Algorithmus durchführt, benutzt.
+Daraufhin werden die Zeitstempel subtrahiert um die vergange Zeit zu erhalten oder die Methode für
+den Zeitstempel hat bereits eine Ausgabe für den Abstand zum letzten Aufruf.
+Letzteres ist der Fall in der Prolog Implementierung. Das eingebaute Prädikat \texttt{statistics/2}
+liefert in seiner zweiten Variable, als zweiten Wert die Zeit zum letzten Aufruf in Millisekunden.
+Das ist exemplarisch in \cref{lst:tree-pro} implementiert.
+
+\begin{lstlisting}[
+  float, caption={Prolog implementation of \texttt{create\_tree/2}},
+  label={lst:tree-pro}, language=Prolog
+]
+create_tree(File, Tree, Time) :-
+    csv_read_file(File, [H|T]),
+    get_attribute_list(H, Attribute),
+    fit_format(T, Attribute, Data),
+    statistics(walltime, _),
+    induce_tree(Data, Attribute, Tree),
+    statistics(walltime, [_,Time]).
+\end{lstlisting}
+
+In der R Implementierung wird mit der Bibliothek \enquote{tictoc}~\cite{izrailev2014tictoc} gearbeitet.
+Hier wird der Algorithmus Aufruf von zwei Aufrufen eingeschlossen, wobei der zweite Aufruf die vergange Zeit
+auf der Konsole in Sekunden ausgibt und in ein Log schreibt. Das ist exemplarisch in \cref{lst:class-r} dargestellt.
+Allerdings kann diese Implementierung nur bis auf 10 Millisekunden genau messen.
+\begin{lstlisting}[
+  float, caption={R implementation of \texttt{train.test.classification}},
+  label={lst:class-r}, language=R
+]
+train.test.classification <- function(trainData, testData) {
+  train <- read.csv(trainData)
+  train$class <- as.factor(train$class)
+  tic(trainData)
+  fit <- rpart(class ~ ., train)
+  toc(log = TRUE)
+  test <- read.csv(testData)
+  prediction <- predict(fit, newdata = test, type = "class")
+  true <- prediction == test$class
+  precision <- sum(true) / length(true)
+  print(c("Precision:", precision))
+  return(precision)
+}
+\end{lstlisting}
+
+In der Python Implementierung wird mit der eingebauten \enquote{time} Bibliothek gearbeitet.
+Hier wird vor und nach der Ausführung die Summe aus System und CPU-Zeit gemessen und anschließend
+voneinander subtrahiert. Das ist exemplarisch in \cref{lst:tree-py} implementiert.
+Hier ist die Präzision der Zeitmessung um die 16 Millisekunden begrenzt.
+
+\begin{lstlisting}[
+  float, caption={Python implementation of \texttt{train\_test\_classification}},
+  label={lst:tree-py}, language=Python
+]
+def train_test_classification(feature_train,target_train,
+                                   feature_test,target_test):
+    t1 = time.process_time()
+    clf = tree.DecisionTreeClassifier()
+    clf = clf.fit(feature_train,target_train)
+    t2 = time.process_time()
+    trainTime = t2 - t1
+    print('Train Time:       {time} sec.'.format(time=trainTime))
+    preds = clf.predict(feature_test)
+    prec = precision(preds, target_test)
+    print('Precision:        {p}'.format(p = prec))
+    return trainTime, prec
+\end{lstlisting}
+
+\subsubsection{Metriken}
+
+Nun geht es darum die benutzten Metriken in der Implementierung vorzustellen.
+Als Performance Metrik für die Klassifikation, habe ich mich für die einfachste entschieden,
+die Genauigkeit, wie in \cref{eq:precision} dargestellt. Hier steht \(p_i\) für die i-te Vorhersage und nimmt den Wert 1 an,
+wenn richtig vorhergesagt wurde oder 0, wenn nicht.
+Im Fall der Regression habe ich mich für den \enquote{Mean-Squared-Error} \cref{eq:mse},
+als Metrik für die Vorhersage, entschieden.
+Zusätzlich wird für die Zeitmessung der \enquote{Standard Error of Mean} \cref{eq:sem} berechnt.
+\begin{align}
+  Precision               & =  1/n * \sum_{i=1}^n p_i  \label{eq:precision} \\
+  Mean Squared Error       & = 1/n * \sum_{i=1}^n (y_i - f(x_i))^2 \label{eq:mse} \\
+  Standard Error of Mean       & = o/\sqrt{n} \label{eq:sem} \\
+  o                        & = \sqrt{(\sum_{i=1}^n (t_i - \mu)^2)/n-1 } 
+  \,\text{,}
+\end{align}
+Hierbei ist \(y_i\) der i-te tatsächliche Wert und \(f(x_i)\) der i-te vorhergesagte Wert, \(t_i\) die i-te Zeitmessung und \(\mu\) das arithmetische Mittel.
+Die Implementierung der Präzision ist für SWI- und SICSTus-Prolog in \cref{lst:prezi-pro}, für R in \cref{lst:class-r} (als Variable \enquote{precision})
+und für Python in \cref{lst:prezi-py} dargestellt.
+\begin{lstlisting}[
+  float, caption={Prolog implementation of \texttt{precision/3}},
+  label={lst:prezi-pro}, language=Prolog
+]
+%! precision(+Klassen:list, +Pred:list, -Gen:double) is det
+%
+%  Berechnet den Anteil der Elemente,
+%  die in beiden Listen miteinander uebereinstimmen
+precision(Klassen, Pred, Gen) :-
+    precision(Klassen, Pred, 0, 0, Gen).
+precision([], [], Len, Acc, Gen) :- !, Gen is Acc / Len.
+precision([KH|KT], [PH|PT], Len, Acc, Gen) :-
+    NewLen is Len + 1,
+    (KH == PH ->
+        NewAcc is Acc + 1,
+        precision(KT, PT, NewLen, NewAcc, Gen)
+    ;   precision(KT, PT, NewLen, Acc, Gen)).
+\end{lstlisting}
+
+\begin{lstlisting}[
+  float, caption={Python implementation of \texttt{precision}},
+  label={lst:prezi-py}, language=Python
+]
+def precision(preds, test):
+    l = len(preds)
+    akk = 0
+    for i in range(l):
+        if(preds[i] == test[i]):
+            akk += 1
+    return akk / l
+\end{lstlisting}
+
+Die Implementierung des Mean Squared Error ist für SWI- und SICSTus-Prolog in \cref{lst:mse-pro}, für R in \cref{lst:mse-r} (als Variable \enquote{mse})
+und für Python in \cref{lst:mse-py} dargestellt.
+
+\begin{lstlisting}[
+  float, caption={Prolog implementation of \texttt{mean\_sq\_error/3}},
+  label={lst:mse-pro}, language=Prolog
+]
+%! mean_sq_error(+Klassen:list, +Pred:list, -Gen:double) is det
+%
+%  berechnet den Mean-Squared-Error zwischen Klassen und Pred.
+mean_sq_error(Klassen, Pred, Gen) :-
+    mean_sq_error(Klassen, Pred, 0, 0, Gen).
+mean_sq_error([], [], Len, Acc, Gen) :- !, Gen is Acc / Len.
+mean_sq_error([HK|TK], [HP|TP], L, Acc, Gen) :-
+    Diff is HK - HP,
+    Sq is Diff**2,
+    NewAcc is Acc + Sq,
+    NewL is L + 1,
+    mean_sq_error(TK, TP, NewL, NewAcc, Gen).
+\end{lstlisting}
+\begin{lstlisting}[
+  float, caption={R implementation of \texttt{train.test.regression}},
+  label={lst:mse-r}, language=R
+]
+train.test.regression <- function(trainData, testData) {
+  train <- read.csv(trainData)
+  tic(trainData)
+  fit <- rpart(Y ~ ., train)
+  toc(log = TRUE)
+  test <- read.csv(testData)
+  prediction <- predict(fit, newdata = test, type = "vector")
+  mse <- sum((prediction - test$Y)**2) / length(test$Y)
+  print(c("Mean-Squared-Error:", mse))
+  return(mse)
+}
+\end{lstlisting}
+\begin{lstlisting}[
+  float, caption={Python implementation of \texttt{mean\_sq\_err}},
+  label={lst:mse-py}, language=Python
+]
+def mean_sq_err(preds, tests):
+    l = len(preds)
+    acc = 0
+    for i in range(l):
+        acc += (preds[i] - tests[i])**2
+    return acc / l
+\end{lstlisting}
+
+Um mögliche Ausreißer in der Performance auszugleichen werden zu jedem Datensatz fünf
+verschiedene Trainings-Test-Aufteilungen durchgeführt und ausgewertet, sodass für diese
+Ergebnisse das arithmetische Mittel berechnet werden kann.
+Zusätzlich wird für die Zeit der Standard Error of Mean~\cref{eq:sem} berechnet.
+Dies ist exemplarisch für den Iris-Datensatz in \cref{lst:iris-tree,lst:err-pro}, für Prolog,
+in \cref{lst:iris-r}, für R und in \cref{lst:iris-py,lst:err-py} für Python, implementiert.
+\begin{lstlisting}[
+  float, caption={Prolog implementation of \texttt{run\_iris\_tree/0}},
+  label={lst:iris-tree}, language=Prolog
+]
+run_iris_tree :-
+    train_test_data_tree('Datensets/iris_train1.csv',
+                            'Datensets/iris_test1.csv', Time1, Gen1),
+    format("-------------------------------------------~n",[]),
+    train_test_data_tree('Datensets/iris_train2.csv',
+                            'Datensets/iris_test2.csv', Time2, Gen2),
+    format("-------------------------------------------~n",[]),
+    train_test_data_tree('Datensets/iris_train3.csv',
+                            'Datensets/iris_test3.csv', Time3, Gen3),
+    format("-------------------------------------------~n",[]),
+    train_test_data_tree('Datensets/iris_train4.csv',
+                            'Datensets/iris_test4.csv', Time4, Gen4),
+    format("-------------------------------------------~n",[]),
+    train_test_data_tree('Datensets/iris_train5.csv',
+                            'Datensets/iris_test5.csv', Time5, Gen5),
+    mean([Time1, Time2, Time3, Time4, Time5],AvgT),
+    mean([Gen1, Gen2, Gen3, Gen4, Gen5],AvgG),
+    calc_metrics([Time1, Time2, Time3, Time4, Time5], AvgT, _, _, Err),
+    format("iris:~n Average train time: ~w sec.~n
+                    Standard Error of Mean(Time): ~w ~n
+                    Average accuracy: ~w ~n", [AvgT,Err,AvgG]).
+\end{lstlisting}
+\begin{lstlisting}[
+  float, caption={Prolog implementation of \texttt{calc\_metrics/5}},
+  label={lst:err-pro}, language=Prolog
+]
+%! calc_metrics(+Targets:list, +Mean:double, -Varianz:double,
+%                                          -Abw:double, -Err:double) is det
+%
+%  Berechnet die Sample Varianz, Sample Standardabweichung und
+%  Standard error of mean
+calc_metrics([], _, 0, 0, 0) :- !.
+calc_metrics(Targets, Mean, Varianz, Abw, Err) :-
+    calc_metrics(Targets, Mean, -1, 0, Varianz, Abw, Err).
+calc_metrics([], _, Len, SumSq, Varianz, Abw, Err) :- 
+    !,
+    Varianz is SumSq / Len,
+    Abw is sqrt(Varianz),
+    RealLen is Len + 1,
+    RootLen is sqrt(RealLen),
+    Err is Abw / RootLen.
+calc_metrics([H|T], Mean, Len, Acc, Varianz, Abw, Err) :-
+    Diff is H - Mean,
+    Sq is Diff**2,
+    NewAcc is Acc + Sq,
+    NewLen is Len + 1,
+    calc_metrics(T, Mean, NewLen, NewAcc, Varianz, Abw, Err).
+\end{lstlisting}
+
+
+\begin{lstlisting}[
+  float, caption={R implementation of \texttt{run.iris}},
+  label={lst:iris-r}, language=R
+]
+run.iris <- function() {
+  print("Training iris: Set1")
+  p1 <- train.test.classification('iris_train1.csv', 'iris_test1.csv')
+  print('----------------------------------------------------------')
+  print("Training iris: Set2")
+  p2 <- train.test.classification('iris_train2.csv', 'iris_test2.csv')
+  print('----------------------------------------------------------')
+  print("Training iris: Set3")
+  p3 <- train.test.classification('iris_train3.csv', 'iris_test3.csv')
+  print('----------------------------------------------------------')
+  print("Training iris: Set4")
+  p4 <- train.test.classification('iris_train4.csv', 'iris_test4.csv')
+  print('----------------------------------------------------------')
+  print("Training iris: Set5")
+  p5 <- train.test.classification('iris_train5.csv', 'iris_test5.csv')
+  print('----------------------------------------------------------')
+  log.lst <- tic.log(format = FALSE)
+  tic.clearlog()
+  timings <- unlist(lapply(log.lst, function(x) x$toc - x$tic))
+  mp <- mean(c(p1,p2,p3,p4,p5))
+  variance <- var(timings)
+  abw <- sqrt(variance)
+  err <- abw / sqrt(length(timings))
+  print(c('Average Train Time:', mean(timings)))
+  print(c('Standard Error of Mean(Time:)', err))
+  print(c('Average Precision:', mp))
+  print('--------------------------------------------')
+  print('--------------------------------------------')
+}
+\end{lstlisting}
+\begin{lstlisting}[
+  float, caption={Python implementation of \texttt{run\_iris}},
+  label={lst:iris-py}, language=Python
+]
+def run_iris():
+    print("Training iris: Set1")
+    t1, p1 = train_test_classification(iris_feature_train1, iris_target_train1,
+                                         iris_feature_test1, iris_target_test1)
+    print('----------------------------------------------------------')
+    print("Training iris: Set2")
+    t2, p2 = train_test_classification(iris_feature_train2, iris_target_train2,
+                                         iris_feature_test2, iris_target_test2)
+    print('----------------------------------------------------------')
+    print("Training iris: Set3")
+    t3, p3 = train_test_classification(iris_feature_train3, iris_target_train3,
+                                         iris_feature_test3, iris_target_test3)
+    print('----------------------------------------------------------')
+    print("Training iris: Set4")
+    t4, p4 = train_test_classification(iris_feature_train4, iris_target_train4,
+                                         iris_feature_test4, iris_target_test4)
+    print('----------------------------------------------------------')
+    print("Training iris: Set5")
+    t5, p5 = train_test_classification(iris_feature_train5, iris_target_train5,
+                                         iris_feature_test5, iris_target_test5)
+    print('----------------------------------------------------------')
+    mt = mean([t1,t2,t3,t4,t5])
+    mp = mean([p1,p2,p3,p4,p5])
+    var, abw, err = metrics([t1,t2,t3,t4,t5])
+    print('Average Train Time:            {t} sec.'.format(t = mt))
+    print('Standard Error of Mean(Time):  {err}'.format(err = err))
+    print('Average Precision:             {p}'.format(p = mp))
+    print()
+    print()
+\end{lstlisting}
+\begin{lstlisting}[
+  float, caption={Python implementation of \texttt{metrics}},
+  label={lst:err-py}, language=Python
+]
+def metrics(targets):
+    l = len(targets)
+    m = mean(targets)
+    sumsq = 0
+    for i in range(l):
+        sumsq += (targets[i] - m)**2
+    variance = sumsq / (l - 1)
+    abw = variance**(1/2)
+    err = abw / (l**(1/2))
+    return variance, abw, err
+\end{lstlisting}
+
+
+\subsection{Performance} \label{sec:Performance}
+Alle der hier benutzten Datensätze wurden aus der Python Bibliothek scikit-learn
+übernommen. Die Erklärungen basieren auf dem jeweiligen \enquote{User Guide} Eintrag auf der Website von scikit-learn.
+
+\subsubsection{Iris}
+Bei diesem Datensatz handelt es sich um eine Abwandlung des weit verbreiteten Iris Datensatzes~\cite{fisher1936use}
+von Fisher. Im Gegensatz zum Original sind in dem hier benutzten Datensatz keine fehlerhaften
+Datenpunkte.
+Der Datensatz besteht enthält 3 verschiedene Klassen (0 entspricht \enquote{Iris-Setosa}, 1 entspricht \enquote{Iris-Versicolor},
+2 entspricht \enquote{Iris-Verginica}), wovon jede 50 Instanzen besitzt und sich auf ein Typ von Schwertlilien
+beziehen. Die Insatzen werden sowohl durch die Kelchblatt Länge und Breite, als auch die
+Blütenblatt Länge und Breite in Centimeter beschrieben. 
+
+In \cref{table:tree-iris} erkennt man, dass meine Implementierung, für diesen kleinen Datensatz, die selbe Präzision hat und
+noch relativ nah an den Referenz Implementierungen liegt. Es fällt allerdings schon auf,
+dass die Ausführung in Sicstus Prolog, im Vergleich zu SWI, deutlich länger braucht.
+
+\begin{table}[ht]
+    \begin{center}
+      \caption{Entscheidungsbaum Ergebnisse Iris. Die Spalte für die Zeit beinhaltet die durchschnittliche Laufzeit
+      und den Standard Error of Mean in Millisekunden. Die Spalte Präzision beinhaltet die durchschnittliche Präzision der Vorhersagen in Prozent}
+      \label{table:tree-iris}
+      \begin{tabular}{lrr}
+        \toprule
+        Implementierung        & Zeit                                & Präzision \\
+        \midrule
+        SWI                 & 26.0  \textpm 6.6 ms                    &  92.88    \\
+        Sicstus             & 74.2   \textpm 1.8 ms                    &  92.88    \\
+        R                   & < 10   \textpm < 10 ms                   &  92.00    \\
+        Python              & 3.1   \textpm  3.1 ms                   &  92.88    \\
+        \bottomrule
+      \end{tabular}
+    \end{center}
+\end{table}
+
+In \cref{table:forest-iris} fällt dieser kleiner Abstand stärker ins Gewicht, da jeweils 100 Bäume erstellt werden.
+Inzwischen braucht meine Implementierung fast das hundertfache an Zeit im Vergleich zu R, ohne dabei eine höhere Präzision
+zu erreichen. Die Ausführung in Sicstus dauert sogar drei mal so Lange wie die in SWI.
+
+\begin{table}[ht]
+    \begin{center}
+      \caption{Random Forest Ergebnisse Iris. Die Spalte für die Zeit beinhaltet die durchschnittliche Laufzeit
+      und den Standard Error of Mean in Millisekunden. Die Spalte Präzision beinhaltet die durchschnittliche Präzision der Vorhersagen in Prozent}
+      \label{table:forest-iris}
+      \begin{tabular}{lrr}
+        \toprule
+        Implementierung        & Zeit                                & Präzision \\
+        \midrule
+        SWI                 & 930.8  \textpm   33.7 ms                    &  92.88    \\
+        Sicstus             & 3579.8  \textpm    66.3 ms                    &  93.33    \\
+        R                   & 12.0   \textpm     3.7  ms                  &  93.77    \\
+        Python              & 115.6   \textpm    3.8  ms                  &  93.77    \\
+        \bottomrule
+      \end{tabular}
+    \end{center}
+\end{table}
+
+
+\subsubsection{Digits}
+Dieser Datensatz ist eine Kopie des Testsets von dem UCI ML handgeschriebenen Ziffern Datensatz~\cite{Dua:2019}.
+Er enthält die Bilder von handgeschriebenen Ziffern. Somit sind die 10 Zielvariablen die Ziffern
+von 0 bis 9. Es sind insgesammt 1797 Bilder vorhanden. Die Bilder wurden so aufbereitet,
+dass sie durch eine $8\times8$ Matrix beschrieben werden können, in der jeder Eintrag eine Zahl in dem Intervall von
+0 bis 16 ist. Dadurch haben die Instanzen des Datensatzes 64 Attribute.  
+
+\cref{table:tree-digits} zeigt sehr deutlich, dass meine Implementierung für große Datensätze nicht geeignet ist.
+Während Python und R im Schnitt unter einer Sekunde bleiben, braucht SWI knapp eine Minute und Sicstus davon mehr als das doppelte.
+Überraschenderweise ist die Präzision der R Umsetzung weit abgeschlagen im Vergleich zu den anderen Programmiersprachen.
+
+\begin{table}[ht]
+    \begin{center}
+      \caption{Entscheidungsbaum Ergebnisse Digits. Die Spalte für die Zeit beinhaltet die durchschnittliche Laufzeit
+      und den Standard Error of Mean in Millisekunden. Die Spalte Präzision beinhaltet die durchschnittliche Präzision der Vorhersagen in Prozent}
+      \label{table:tree-digits}
+      \begin{tabular}{lrr}
+        \toprule
+        Implementierung        & Zeit                                & Präzision \\
+        \midrule
+        SWI                 & 58003.0   \textpm   2819.1    ms                &  83.96    \\
+        Sicstus             & 159970.0    \textpm    3516.1  ms                  &  83.96    \\
+        R                   & 110.0   \textpm     < 0.1         ms           &  75.22    \\
+        Python              & 15.6     \textpm    < 0.1      ms              &  83.59    \\
+        \bottomrule
+      \end{tabular}
+    \end{center}
+\end{table}
+
+Durch \cref{table:forest-digits} bestätigt sich der Trend. R und Python bleiben unter einer Sekunde, während meine Implementierung über
+600 benötigt. Außerdem liegt auch die Präzision leicht unter den anderen Implementierungen, das könnte aber mit der zufälligen
+Auswahl der Attribute zusammenhängen.
+Da für Sicstus-Prolog nach über 90 Minuten kein Ergebnis vorlag wurde das Experiment abgebrochen.  
+
+\begin{table}[ht]
+    \begin{center}
+      \caption{Random Forest Ergebnisse Digits. Die Spalte für die Zeit beinhaltet die durchschnittliche Laufzeit
+      und den Standard Error of Mean in Millisekunden. Die Spalte Präzision beinhaltet die durchschnittliche Präzision der Vorhersagen in Prozent}
+      \label{table:forest-digits}
+      \begin{tabular}{lrr}
+        \toprule
+        Implementierung        & Zeit                                & Präzision \\
+        \midrule
+        SWI                 & 615226.6   \textpm    14648.1 ms                    &  95.52    \\
+        Sicstus             & -                              &  -    \\
+        R                   & 480.0      \textpm     12.6   ms                 &  97.37    \\
+        Python              & 268.7      \textpm     3.1    ms                &  97.22    \\
+        \bottomrule
+      \end{tabular}
+    \end{center}
+\end{table}
+
+
+\subsubsection{Diabetes}
+Der Diabetes Datensatz~\cite{efron2004least} besteht aus den 10 Attributen: \enquote{Alter in Jahren}, \enquote{Geschlecht},
+\enquote{Body Mass Index}, \enquote{durchschnittlicher Blutdruck} und sechs verschiedenen Blut Serum Messungen.
+Dies sind die gemessenen Attribute von den 442 Diabetes Patienten, die diesen Datensatz representieren.
+Dazu kommt die Zielvariable die den Fortschritt der Krankheit nach einem Jahr darstellt.
+Alle Attribute sind numerisch. 
+
+In diesen Datensatz fällt auf, dass meine Implementierung, zumindest von dem Mean Square Error her, die Python Implementierung
+schlägt. Dadurch, dass der Datensatz wieder kleiner ist, ist die Laufzeit bedeutend kleiner, allerdings immernoch weit entfernt
+von R und Python, wie man in \cref{table:tree-diabetes} sehen kann.
+
+\begin{table}[ht]
+    \begin{center}
+      \caption{Entscheidungsbaum Ergebnisse Diabetes. Die Spalte für die Zeit beinhaltet die durchschnittliche Laufzeit
+      und den Standard Error of Mean in Millisekunden. Die Spalte MSE beinhaltet den durchschnittlichen Mean Squared Error der Vorhersagen}
+      \label{table:tree-diabetes}
+      \begin{tabular}{lrr}
+        \toprule
+        Implementierung        & Zeit                                & MSE \\
+        \midrule
+        SWI                 & 1917.2      \textpm    61.4    ms                &  6272.5489    \\
+        Sicstus             & 6860.6     \textpm     222.8   ms                 &  6272.5489    \\
+        R                   & 4.0    \textpm     4.0         ms           &  4275.9852    \\
+        Python              & 3.1      \textpm     3.1       ms             &  6541.9654    \\
+        \bottomrule
+      \end{tabular}
+    \end{center}
+\end{table}
+
+\cref{table:forest-diabetes} bestätigt, dass auch im Fall der Regression meine Implementierung
+nicht gut skaliert.
+
+\begin{table}[ht]
+    \begin{center}
+      \caption{Random Forest Ergebnisse Diabetes. Die Spalte für die Zeit beinhaltet die durchschnittliche Laufzeit
+      und den Standard Error of Mean in Millisekunden. Die Spalte MSE beinhaltet den durchschnittlichen Mean Squared Error der Vorhersagen}
+      \label{table:forest-diabetes}
+      \begin{tabular}{lrr}
+        \toprule
+        Implementierung        & Zeit                                & MSE \\
+        \midrule
+        SWI                 & 46008.2       \textpm   1958.4 ms                   &  3800.8435    \\
+        Sicstus             & 138488.6      \textpm     1704.5 ms                   &  3737.4738    \\
+        R                   & 52.0        \textpm     7.3     ms               &  3484.6973    \\
+        Python              & 190.6        \textpm     3.1    ms                &  3531.5891    \\
+        \bottomrule
+      \end{tabular}
+    \end{center}
+\end{table}
+
+
+\subsubsection{California Housing}
+Der California Housing Datensatz~\cite{pace1997sparse} stammt aus dem StatLib Repository.
+Die Zielvariable ist der Median Haus Wert für Districte in Californien, ausgedrückt in
+100.000 Dollar. Der Datensatz ist abgeleitet aus dem 1990 U.S Zensus.
+Jede Instanz aus dem Datensatz wird durch die Attribute \enquote{Median Einkommen},
+\enquote{Median Haus Alter}, \enquote{durchschnittlische Anzahl Räume}, \enquote{durchschnittliche Anzahl Schlafzimmer},
+\enquote{Bevölkerung}, \enquote{durchschnittlische Anzahl Hausbewohner}, \enquote{Geographische Breite} und
+\enquote{Geographische Länge}.
+
+Im Fall von SWI, als auch Sicstus-Prolog konnte nach 20 Minuten kein Entscheidungsbaum oder Random Forest, auf Grundlage,
+der ersten Train-Test-Aufteilung erstellt werden, weswegen, dass Experiment abgebrochen wurde.
+
+\begin{table}[ht]
+    \begin{center}
+      \caption{Entscheidungsbaum Ergebnisse California. Die Spalte für die Zeit beinhaltet die durchschnittliche Laufzeit
+      und den Standard Error of Mean in Millisekunden. Die Spalte MSE beinhaltet den durchschnittlichen Mean Squared Error der Vorhersagen}
+      \label{table:tree-california}
+      \begin{tabular}{lrr}
+        \toprule
+        Implementierung        & Zeit                                & MSE \\
+        \midrule
+        SWI                 & -                        &  -    \\
+        Sicstus             & -                            &  -    \\
+        R                   & 200.0           \textpm     3.2 ms                   &  0.6052    \\
+        Python              & 134.4        \textpm     3.8    ms                &  0.5261    \\
+        \bottomrule
+      \end{tabular}
+    \end{center}
+\end{table}
+\begin{table}[ht]
+    \begin{center}
+      \caption{Random Forest Ergebnisse Calinfornia. Die Spalte für die Zeit beinhaltet die durchschnittliche Laufzeit
+      und den Standard Error of Mean in Millisekunden. Die Spalte MSE beinhaltet den durchschnittlichen Mean Squared Error der Vorhersagen}
+      \label{table:forest-california}
+      \begin{tabular}{lrr}
+        \toprule
+        Implementierung        & Zeit                                & MSE \\
+        \midrule
+        SWI                 & -                       &  -    \\
+        Sicstus             & -                        &  -    \\
+        R                   & 16162.0  \textpm     91.7 ms                   &  0.2365    \\
+        Python              & 8209.4    \textpm    208.0 ms                   &  0.2481    \\
+        \bottomrule
+      \end{tabular}
+    \end{center}
+\end{table}

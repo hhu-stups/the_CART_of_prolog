@@ -1,0 +1,21 @@
+\babel@toc {ngerman}{}\relax 
+\babel@toc {ngerman}{}\relax 
+\babel@toc {ngerman}{}\relax 
+\babel@toc {ngerman}{}\relax 
+\babel@toc {ngerman}{}\relax 
+\contentsline {table}{\numberline {1}{\ignorespaces logische Verknüpfungen in Prolog\relax }}{5}{table.1}%
+\contentsline {table}{\numberline {2}{\ignorespaces Darstellung von Baum und Datensatz\relax }}{7}{table.2}%
+\contentsline {table}{\numberline {3}{\ignorespaces Entscheidungsbaum Ergebnisse Iris. Die Spalte für die Zeit beinhaltet die durchschnittliche Laufzeit und den Standard Error of Mean in Millisekunden. Die Spalte Präzision beinhaltet die durchschnittliche Präzision der Vorhersagen in Prozent\relax }}{21}{table.3}%
+\contentsline {table}{\numberline {4}{\ignorespaces Random Forest Ergebnisse Iris. Die Spalte für die Zeit beinhaltet die durchschnittliche Laufzeit und den Standard Error of Mean in Millisekunden. Die Spalte Präzision beinhaltet die durchschnittliche Präzision der Vorhersagen in Prozent\relax }}{24}{table.4}%
+\contentsline {table}{\numberline {5}{\ignorespaces Entscheidungsbaum Ergebnisse Digits. Die Spalte für die Zeit beinhaltet die durchschnittliche Laufzeit und den Standard Error of Mean in Millisekunden. Die Spalte Präzision beinhaltet die durchschnittliche Präzision der Vorhersagen in Prozent\relax }}{24}{table.5}%
+\contentsline {table}{\numberline {6}{\ignorespaces Random Forest Ergebnisse Digits. Die Spalte für die Zeit beinhaltet die durchschnittliche Laufzeit und den Standard Error of Mean in Millisekunden. Die Spalte Präzision beinhaltet die durchschnittliche Präzision der Vorhersagen in Prozent\relax }}{25}{table.6}%
+\contentsline {table}{\numberline {7}{\ignorespaces Entscheidungsbaum Ergebnisse Diabetes. Die Spalte für die Zeit beinhaltet die durchschnittliche Laufzeit und den Standard Error of Mean in Millisekunden. Die Spalte MSE beinhaltet den durchschnittlichen Mean Squared Error der Vorhersagen\relax }}{25}{table.7}%
+\contentsline {table}{\numberline {8}{\ignorespaces Random Forest Ergebnisse Diabetes. Die Spalte für die Zeit beinhaltet die durchschnittliche Laufzeit und den Standard Error of Mean in Millisekunden. Die Spalte MSE beinhaltet den durchschnittlichen Mean Squared Error der Vorhersagen\relax }}{26}{table.8}%
+\contentsline {table}{\numberline {9}{\ignorespaces Entscheidungsbaum Ergebnisse California. Die Spalte für die Zeit beinhaltet die durchschnittliche Laufzeit und den Standard Error of Mean in Millisekunden. Die Spalte MSE beinhaltet den durchschnittlichen Mean Squared Error der Vorhersagen\relax }}{26}{table.9}%
+\contentsline {table}{\numberline {10}{\ignorespaces Random Forest Ergebnisse Calinfornia. Die Spalte für die Zeit beinhaltet die durchschnittliche Laufzeit und den Standard Error of Mean in Millisekunden. Die Spalte MSE beinhaltet den durchschnittlichen Mean Squared Error der Vorhersagen\relax }}{27}{table.10}%
+\contentsline {table}{\numberline {11}{\ignorespaces Ergebnisse für die Klassifikation. In der Spalte Datensatz Nr. befindet sich der benutzte Datensatz und welche Train-Test-Aufteilung benutzt wurde (1 - 5). Die Spalte Zeit beinhaltet die benötigte Trainingszeit in Millisekunden. Die Spalte Präzision beinhaltet die Präzision der Vorhersagen für den Durchlauf in Prozent. Die Spalte Typ zeigt an, ob es sich bei dem benutzten Algorithmus um einen Entscheidungsbaum (DT) oder Random Forest (RF) handelt.\relax }}{29}{table.11}%
+\contentsline {table}{\numberline {11}{\ignorespaces Fortsetzung der Klassifikation\relax }}{30}{table.11}%
+\contentsline {table}{\numberline {11}{\ignorespaces Fortsetzung der Klassifikation\relax }}{31}{table.11}%
+\contentsline {table}{\numberline {12}{\ignorespaces Ergebnisse für die Regression. In der Spalte Datensatz Nr. befindet sich der benutzte Datensatz und welche Train-Test-Aufteilung benutzt wurde (1 - 5). Die Spalte Zeit beinhaltet die benötigte Trainingszeit in Millisekunden. Die Spalte MSE beinhaltet den Mean Squared Error der Vorhersagen für den Durchlauf. Die Spalte Typ zeigt an, ob es sich bei dem benutzten Algorithmus um einen Entscheidungsbaum (DT) oder Random Forest (RF) handelt.\relax }}{31}{table.12}%
+\contentsline {table}{\numberline {12}{\ignorespaces Fortsetzung der Regression\relax }}{32}{table.12}%
+\contentsline {table}{\numberline {12}{\ignorespaces Fortsetzung der Regression\relax }}{33}{table.12}%
