@@ -1,0 +1,25 @@
+Training iris: Set1
+Train Time:       0.0 sec.
+Precision:        0.9777777777777777
+----------------------------------------------------------
+Training iris: Set2
+Train Time:       0.0 sec.
+Precision:        0.9333333333333333
+----------------------------------------------------------
+Training iris: Set3
+Train Time:       0.015625 sec.
+Precision:        0.8888888888888888
+----------------------------------------------------------
+Training iris: Set4
+Train Time:       0.0 sec.
+Precision:        0.9333333333333333
+----------------------------------------------------------
+Training iris: Set5
+Train Time:       0.0 sec.
+Precision:        0.9111111111111111
+----------------------------------------------------------
+Average Train Time:            0.003125 sec.
+Standard Error of Mean(Time):  0.0031250000000000006
+Average Precision:             0.928888888888889
+
+

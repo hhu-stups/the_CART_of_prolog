@@ -1,0 +1,23 @@
+Running Datensets/diabetes_train1.csv train....
+Tree creation Datensets/diabetes_train1.csv train: 2.043 sec.
+Mean Squared Error: 6373.8646616541355 
+-------------------------------------------
+Running Datensets/diabetes_train2.csv train....
+Tree creation Datensets/diabetes_train2.csv train: 1.925 sec.
+Mean Squared Error: 6026.270676691729 
+-------------------------------------------
+Running Datensets/diabetes_train3.csv train....
+Tree creation Datensets/diabetes_train3.csv train: 1.686 sec.
+Mean Squared Error: 6515.248120300752 
+-------------------------------------------
+Running Datensets/diabetes_train4.csv train....
+Tree creation Datensets/diabetes_train4.csv train: 1.991 sec.
+Mean Squared Error: 6697.639097744361 
+-------------------------------------------
+Running Datensets/diabetes_train5.csv train....
+Tree creation Datensets/diabetes_train5.csv train: 1.941 sec.
+Mean Squared Error: 5749.721804511279 
+diabetes:
+ Average train time: 1.9172 sec.
+ Standard Error of Mean(Time): 0.06138110458439147 
+ Average MSE: 6272.548872180451 

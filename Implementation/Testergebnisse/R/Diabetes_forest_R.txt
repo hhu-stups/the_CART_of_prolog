@@ -1,0 +1,25 @@
+[1] "Training diabetes: Set1"
+diabetes_train1.csv: 0.08 sec elapsed
+[1] "Mean-Squared-Error:" "3690.6853871652"    
+[1] "----------------------------------------------------------"
+[1] "Training diabetes: Set2"
+diabetes_train2.csv: 0.04 sec elapsed
+[1] "Mean-Squared-Error:" "3569.28403205347"   
+[1] "----------------------------------------------------------"
+[1] "Training diabetes: Set3"
+diabetes_train3.csv: 0.04 sec elapsed
+[1] "Mean-Squared-Error:" "3221.62036645343"   
+[1] "----------------------------------------------------------"
+[1] "Training diabetes: Set4"
+diabetes_train4.csv: 0.05 sec elapsed
+[1] "Mean-Squared-Error:" "3714.26613583104"   
+[1] "----------------------------------------------------------"
+[1] "Training diabetes: Set5"
+diabetes_train5.csv: 0.05 sec elapsed
+[1] "Mean-Squared-Error:" "3227.63057269758"   
+[1] "----------------------------------------------------------"
+[1] "Average Train Time:" "0.0519999999785796" 
+[1] "Standard Error of Mean(Time:)" "0.00734846922410385"          
+[1] "Average MSE:"     "3484.69729884014"
+[1] "--------------------------------------------"
+[1] "--------------------------------------------"

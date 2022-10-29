@@ -1,0 +1,23 @@
+Running Datensets/digits_train1.csv ....
+Tree creation Datensets/digits_train1.csv : 62.921 sec.
+Tree has an accuracy of: 0.8518518518518519 .
+-------------------------------------------
+Running Datensets/digits_train2.csv ....
+Tree creation Datensets/digits_train2.csv : 65.391 sec.
+Tree has an accuracy of: 0.8314814814814815 .
+-------------------------------------------
+Running Datensets/digits_train3.csv ....
+Tree creation Datensets/digits_train3.csv : 56.592 sec.
+Tree has an accuracy of: 0.825925925925926 .
+-------------------------------------------
+Running Datensets/digits_train4.csv ....
+Tree creation Datensets/digits_train4.csv : 49.487 sec.
+Tree has an accuracy of: 0.8685185185185185 .
+-------------------------------------------
+Running Datensets/digits_train5.csv ....
+Tree creation Datensets/digits_train5.csv : 55.624 sec.
+Tree has an accuracy of: 0.8203703703703704 .
+iris:
+ Average train time: 58.003 sec.
+ Standard Error of Mean(Time): 2.8190608897290605 
+ Average accuracy: 0.8396296296296297 

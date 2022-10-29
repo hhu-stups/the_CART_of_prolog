@@ -1,0 +1,23 @@
+Running Datensets/digits_train1.csv ....
+Forest creation Datensets/digits_train1.csv : 664.739 sec.
+Forest has an accuracy of: 0.9703703703703703 .
+-------------------------------------------
+Running Datensets/digits_train2.csv ....
+Forest creation Datensets/digits_train2.csv : 607.559 sec.
+Forest has an accuracy of: 0.9425925925925925 .
+-------------------------------------------
+Running Datensets/digits_train3.csv ....
+Forest creation Datensets/digits_train3.csv : 600.152 sec.
+Forest has an accuracy of: 0.9518518518518518 .
+-------------------------------------------
+Running Datensets/digits_train4.csv ....
+Forest creation Datensets/digits_train4.csv : 577.392 sec.
+Forest has an accuracy of: 0.9518518518518518 .
+-------------------------------------------
+Running Datensets/digits_train5.csv ....
+Forest creation Datensets/digits_train5.csv : 626.291 sec.
+Forest has an accuracy of: 0.9574074074074074 .
+iris:
+ Average train time: 615.2266000000001 sec.
+ Standard Error of Mean(Time): 14.6481932558251 
+ Average accuracy: 0.9548148148148148 

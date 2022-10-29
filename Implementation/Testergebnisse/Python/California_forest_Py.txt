@@ -1,0 +1,25 @@
+Training california: Set1
+Train Time:                    8.0 sec.
+Mean Squared Error:            0.24084129721082442
+----------------------------------------------------------
+Training california: Set2
+Train Time:                    8.0 sec.
+Mean Squared Error:            0.24845840725133644
+----------------------------------------------------------
+Training california: Set3
+Train Time:                    8.109375 sec.
+Mean Squared Error:            0.2606064873835807
+----------------------------------------------------------
+Training california: Set4
+Train Time:                    7.90625 sec.
+Mean Squared Error:            0.25601724751777827
+----------------------------------------------------------
+Training california: Set5
+Train Time:                    9.03125 sec.
+Mean Squared Error:            0.23469692333871786
+----------------------------------------------------------
+Average Train Time:            8.209375 sec.
+Standard Error of Mean(Time):  0.20797103914968543
+Average Mean Squared Error:    0.24812407254044758
+
+

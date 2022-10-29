@@ -1,0 +1,25 @@
+Training diabetes: Set1
+Train Time:                    0.0 sec.
+Mean Squared Error:            6357.812030075188
+----------------------------------------------------------
+Training diabetes: Set2
+Train Time:                    0.0 sec.
+Mean Squared Error:            6979.8646616541355
+----------------------------------------------------------
+Training diabetes: Set3
+Train Time:                    0.0 sec.
+Mean Squared Error:            6397.533834586467
+----------------------------------------------------------
+Training diabetes: Set4
+Train Time:                    0.0 sec.
+Mean Squared Error:            6815.609022556391
+----------------------------------------------------------
+Training diabetes: Set5
+Train Time:                    0.015625 sec.
+Mean Squared Error:            6159.007518796992
+----------------------------------------------------------
+Average Train Time:            0.003125 sec.
+Standard Error of Mean(Time):  0.003125
+Average Mean Squared Error:    6541.965413533835
+
+

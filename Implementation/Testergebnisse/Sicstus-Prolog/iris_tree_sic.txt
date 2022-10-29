@@ -1,0 +1,23 @@
+Running Datensets/iris_train1.csv ....
+Tree creation Datensets/iris_train1.csv : 0.079 sec.
+Tree has an accuracy of: 0.9777777777777777 .
+-------------------------------------------
+Running Datensets/iris_train2.csv ....
+Tree creation Datensets/iris_train2.csv : 0.076 sec.
+Tree has an accuracy of: 0.9333333333333333 .
+-------------------------------------------
+Running Datensets/iris_train3.csv ....
+Tree creation Datensets/iris_train3.csv : 0.071 sec.
+Tree has an accuracy of: 0.8888888888888888 .
+-------------------------------------------
+Running Datensets/iris_train4.csv ....
+Tree creation Datensets/iris_train4.csv : 0.069 sec.
+Tree has an accuracy of: 0.9333333333333333 .
+-------------------------------------------
+Running Datensets/iris_train5.csv ....
+Tree creation Datensets/iris_train5.csv : 0.076 sec.
+Tree has an accuracy of: 0.9111111111111111 .
+iris:
+ Average train time: 0.0742 sec.
+ Standard Error of Mean(Time): 0.001827566688249706 
+ Average accuracy: 0.928888888888889 

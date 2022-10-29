@@ -1,0 +1,25 @@
+[1] "Training california: Set1"
+california_train1.csv: 16.11 sec elapsed
+[1] "Mean-Squared-Error:" "0.229568060539476"  
+[1] "----------------------------------------------------------"
+[1] "Training california: Set2"
+california_train2.csv: 15.91 sec elapsed
+[1] "Mean-Squared-Error:" "0.236210938120417"  
+[1] "----------------------------------------------------------"
+[1] "Training california: Set3"
+california_train3.csv: 16.22 sec elapsed
+[1] "Mean-Squared-Error:" "0.245995544186116"  
+[1] "----------------------------------------------------------"
+[1] "Training california: Set4"
+california_train4.csv: 16.47 sec elapsed
+[1] "Mean-Squared-Error:" "0.246406914154582"  
+[1] "----------------------------------------------------------"
+[1] "Training california: Set5"
+california_train5.csv: 16.1 sec elapsed
+[1] "Mean-Squared-Error:" "0.224591993292444"  
+[1] "----------------------------------------------------------"
+[1] "Average Train Time:" "16.1620000000112"   
+[1] "Standard Error of Mean(Time:)" "0.0917278583512632"           
+[1] "Average MSE:"      "0.236554690058607"
+[1] "--------------------------------------------"
+[1] "--------------------------------------------"

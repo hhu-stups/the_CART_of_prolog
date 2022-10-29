@@ -1,0 +1,25 @@
+Training digits: Set1
+Train Time:       0.015625 sec.
+Precision:        0.8518518518518519
+----------------------------------------------------------
+Training digits: Set2
+Train Time:       0.015625 sec.
+Precision:        0.8203703703703704
+----------------------------------------------------------
+Training digits: Set3
+Train Time:       0.015625 sec.
+Precision:        0.8240740740740741
+----------------------------------------------------------
+Training digits: Set4
+Train Time:       0.015625 sec.
+Precision:        0.8574074074074074
+----------------------------------------------------------
+Training digits: Set5
+Train Time:       0.015625 sec.
+Precision:        0.825925925925926
+----------------------------------------------------------
+Average Train Time:            0.015625 sec.
+Standard Error of Mean(Time):  0.0
+Average Precision:             0.835925925925926
+
+

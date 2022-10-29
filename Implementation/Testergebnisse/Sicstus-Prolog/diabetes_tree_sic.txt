@@ -1,0 +1,23 @@
+Running Datensets/diabetes_train1.csv ....
+Tree creation Datensets/diabetes_train1.csv : 6.405 sec.
+Tree has an MSE of: 6373.8646616541355 .
+-------------------------------------------
+Running Datensets/diabetes_train2.csv ....
+Tree creation Datensets/diabetes_train2.csv : 6.817 sec.
+Tree has an MSE of: 6026.270676691729 .
+-------------------------------------------
+Running Datensets/diabetes_train3.csv ....
+Tree creation Datensets/diabetes_train3.csv : 6.569 sec.
+Tree has an MSE of: 6515.248120300752 .
+-------------------------------------------
+Running Datensets/diabetes_train4.csv ....
+Tree creation Datensets/diabetes_train4.csv : 7.695 sec.
+Tree has an MSE of: 6697.639097744361 .
+-------------------------------------------
+Running Datensets/diabetes_train5.csv ....
+Tree creation Datensets/diabetes_train5.csv : 6.817 sec.
+Tree has an MSE of: 5749.721804511279 .
+diabetes:
+ Average train time: 6.8606 sec.
+ Standard Error of Mean(Time): 0.22278096866653582 
+ Average MSE: 6272.548872180451 
